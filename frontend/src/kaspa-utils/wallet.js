@@ -18,7 +18,7 @@ export async function connectKastleWallet(verbose = false) {
         throw new Error('Kastle Wallet functions not available. (from wallet.js)');
     }
 
-    if (verbose) console.log('🔌 Connecting to Kastle Wallet (from wallet.js)...');
+    if (verbose) console.log('Connecting to Kastle Wallet (from wallet.js)...');
 
     const walletInstalled = await kastleWalletFuncs.isWalletInstalled();
     if (!walletInstalled) {
@@ -26,17 +26,17 @@ export async function connectKastleWallet(verbose = false) {
     }
 
     const connectionResult = await kastleWalletFuncs.connect();
-    if (verbose) console.log('🔗 Connection result:', connectionResult);
+    if (verbose) console.log('Connection result:', connectionResult);
 
     const walletAddress = await kastleWalletFuncs.getWalletAddress();
     const network = await kastleWalletFuncs.getNetwork();
     const balance = await kastleWalletFuncs.getBalance();
 
     if (verbose) {
-      console.log('✅ Kastle Wallet connected successfully (from wallet.js)');
-      console.log(`📍 Address: ${walletAddress}`);
-      console.log(`🌐 Network: ${network}`);
-      console.log(`💰 Balance: ${balance} sompi`);
+      console.log('Kastle Wallet connected successfully (from wallet.js)');
+      console.log(`Address: ${walletAddress}`);
+      console.log(`Network: ${network}`);
+      console.log(`Balance: ${balance} sompi`);
     }
 
     return {
@@ -49,7 +49,7 @@ export async function connectKastleWallet(verbose = false) {
     };
 
   } catch (error) {
-    console.error('❌ Error connecting to Kastle Wallet (from wallet.js):', error);
+    console.error('Error connecting to Kastle Wallet (from wallet.js):', error);
     return {
       success: false,
       error: error.message,
@@ -74,10 +74,10 @@ export async function disconnectKastleWallet(verbose = false) {
         throw new Error('Kastle Wallet functions not available. (from wallet.js)');
     }
 
-    if (verbose) console.log('🔌 Disconnecting from Kastle Wallet (from wallet.js)...');
+    if (verbose) console.log('Disconnecting from Kastle Wallet (from wallet.js)...');
 
     const result = await kastleWalletFuncs.disconnect();
-    if (verbose) console.log('✅ Kastle Wallet disconnected successfully (from wallet.js)');
+    if (verbose) console.log('Kastle Wallet disconnected successfully (from wallet.js)');
 
     return {
       success: true,
@@ -86,7 +86,7 @@ export async function disconnectKastleWallet(verbose = false) {
     };
 
   } catch (error) {
-    console.error('❌ Error disconnecting from Kastle Wallet (from wallet.js):', error);
+    console.error('Error disconnecting from Kastle Wallet (from wallet.js):', error);
     return {
       success: false,
       error: error.message,
@@ -112,18 +112,18 @@ export async function fetchKastleUtxos(address = null, verbose = false) {
         throw new Error('Kastle Wallet functions not available. (from wallet.js)');
     }
 
-    if (verbose) console.log('💰 Fetching UTXOs from Kastle Wallet (from wallet.js)...');
+    if (verbose) console.log('Fetching UTXOs from Kastle Wallet (from wallet.js)...');
 
     let targetAddress = address;
     if (!targetAddress) {
       targetAddress = await kastleWalletFuncs.getWalletAddress();
-      if (verbose) console.log(`📍 Using wallet address: ${targetAddress}`);
+      if (verbose) console.log(`Using wallet address: ${targetAddress}`);
     }
 
     const utxos = await kastleWalletFuncs.getUtxosByAddress(targetAddress);
     
     if (verbose) {
-      console.log(`✅ Found ${utxos.length} UTXOs (from wallet.js)`);
+      console.log(`Found ${utxos.length} UTXOs (from wallet.js)`);
       utxos.forEach((utxo, index) => {
         let displayValue = 0;
         let displayTxId = 'unknown';
@@ -136,7 +136,7 @@ export async function fetchKastleUtxos(address = null, verbose = false) {
             displayTxId = utxo.transactionId || utxo.txId || utxo.id || 'unknown';
           }
         } catch (error) {
-          console.warn(`⚠️ Error extracting UTXO ${index + 1} info (from wallet.js):`, error);
+          console.warn(`Warning: Error extracting UTXO ${index + 1} info (from wallet.js):`, error);
         }
         const shortTxId = typeof displayTxId === 'string' ? displayTxId.substring(0, 16) + '...' : 'unknown';
         console.log(`   ${index + 1}. ${displayValue} sompi (${shortTxId})`);
@@ -160,7 +160,7 @@ export async function fetchKastleUtxos(address = null, verbose = false) {
         }
         if (typeof utxoValue === 'bigint') utxoValue = Number(utxoValue);
       } catch (error) {
-        console.warn(`⚠️ Error calculating balance for UTXO (from wallet.js):`, error);
+        console.warn(`Warning: Error calculating balance for UTXO (from wallet.js):`, error);
       }
       return sum + utxoValue;
     }, 0);
@@ -174,7 +174,7 @@ export async function fetchKastleUtxos(address = null, verbose = false) {
     };
 
   } catch (error) {
-    console.error('❌ Error fetching UTXOs from Kastle Wallet (from wallet.js):', error);
+    console.error('Error fetching UTXOs from Kastle Wallet (from wallet.js):', error);
     return {
       success: false,
       error: error.message,
@@ -211,7 +211,7 @@ export async function getKastleWalletStatus(verbose = false) {
         };
     }
 
-    if (verbose) console.log('🔍 Checking Kastle Wallet status (from wallet.js)...');
+    if (verbose) console.log('Checking Kastle Wallet status (from wallet.js)...');
 
     const status = {
       frameworkReady: true,
@@ -227,7 +227,7 @@ export async function getKastleWalletStatus(verbose = false) {
       status.walletInstalled = await kastleWalletFuncs.isWalletInstalled();
       status.availableFunctions = Object.keys(kastleWalletFuncs);
     } catch (error) {
-      if (verbose) console.warn('⚠️ Could not check wallet installation (from wallet.js):', error.message);
+      if (verbose) console.warn('Warning: Could not check wallet installation (from wallet.js):', error.message);
     }
 
     if (status.walletInstalled) {
@@ -237,7 +237,7 @@ export async function getKastleWalletStatus(verbose = false) {
       } catch (error) {
         // Not necessarily an error if wallet is installed but not connected by user yet
         if (verbose && !error.message.toLowerCase().includes('not connected')) {
-            console.warn('⚠️ Could not get wallet address (wallet may not be connected by user): (from wallet.js)', error.message);
+            console.warn('Warning: Could not get wallet address (wallet may not be connected by user): (from wallet.js)', error.message);
         }
         status.connected = false;
       }
@@ -247,13 +247,13 @@ export async function getKastleWalletStatus(verbose = false) {
           status.network = await kastleWalletFuncs.getNetwork();
           status.balance = await kastleWalletFuncs.getBalance();
         } catch (error) {
-          if (verbose) console.warn('⚠️ Could not get network/balance info (from wallet.js):', error.message);
+          if (verbose) console.warn('Warning: Could not get network/balance info (from wallet.js):', error.message);
         }
       }
     }
 
     if (verbose) {
-      console.log('📊 Kastle Wallet Status (from wallet.js):');
+      console.log('Kastle Wallet Status (from wallet.js):');
       console.log(`   Framework Ready: ${status.frameworkReady}`);
       console.log(`   Wallet Installed: ${status.walletInstalled}`);
       console.log(`   Connected: ${status.connected}`);
@@ -268,7 +268,7 @@ export async function getKastleWalletStatus(verbose = false) {
     };
 
   } catch (error) {
-    console.error('❌ Error getting Kastle Wallet status (from wallet.js):', error);
+    console.error('Error getting Kastle Wallet status (from wallet.js):', error);
     return {
       success: false,
       error: error.message,
@@ -296,7 +296,7 @@ export async function signTransactionWithKastle(utxos, outputs, verbose = false,
         throw new Error('Kastle Wallet functions (buildTransaction, signPskt, SignType) not available. (from wallet.js)');
     }
 
-    if (verbose) console.log('✍️ Building and signing transaction with correct Kastle SDK approach (from wallet.js)...');
+    if (verbose) console.log('Building and signing transaction with correct Kastle SDK approach (from wallet.js)...');
 
     if (!Array.isArray(utxos) || utxos.length === 0) throw new Error('Invalid UTXOs: must be a non-empty array');
     if (!Array.isArray(outputs) || outputs.length === 0) throw new Error('Invalid outputs: must be a non-empty array');
@@ -306,10 +306,10 @@ export async function signTransactionWithKastle(utxos, outputs, verbose = false,
 
     let transaction;
     if (preBuiltTransaction) {
-      if (verbose) console.log('🎯 Using pre-built pattern transaction (preserving pattern TxID)... (from wallet.js)');
+      if (verbose) console.log('Using pre-built pattern transaction (preserving pattern TxID)... (from wallet.js)');
       transaction = preBuiltTransaction;
     } else {
-      if (verbose) console.log('🔧 Using buildTransaction() to create proper transaction object... (from wallet.js)');
+      if (verbose) console.log('Using buildTransaction() to create proper transaction object... (from wallet.js)');
       transaction = kastleWalletFuncs.buildTransaction(utxos, outputs);
       if (!transaction) throw new Error('buildTransaction() returned null/undefined');
     }
@@ -319,10 +319,10 @@ export async function signTransactionWithKastle(utxos, outputs, verbose = false,
       signType: kastleWalletFuncs.SignType.NoneAnyOneCanPay,
     }));
 
-    if (verbose) console.log(`✍️ Calling signPskt(transaction, scriptOptions) with ${scriptOptions.length} script options... (from wallet.js)`);
+    if (verbose) console.log(`Calling signPskt(transaction, scriptOptions) with ${scriptOptions.length} script options... (from wallet.js)`);
     const signedResult = await kastleWalletFuncs.signPskt(transaction, scriptOptions);
 
-    if (verbose) console.log('✅ Transaction signed successfully with Method 2 approach! (from wallet.js)');
+    if (verbose) console.log('Transaction signed successfully with Method 2 approach! (from wallet.js)');
 
     return {
       success: true,
@@ -338,7 +338,7 @@ export async function signTransactionWithKastle(utxos, outputs, verbose = false,
       }
     };
   } catch (error) {
-    console.error('❌ Error in Method 2 transaction signing (from wallet.js):', error);
+    console.error('Error in Method 2 transaction signing (from wallet.js):', error);
     return {
       success: false,
       error: error.message,
@@ -358,7 +358,7 @@ export async function signWithKastle(psktData, verbose = false) {
   // This function delegates to the enhanced implementation.
   // It expects psktData to be an object containing { utxos, outputs, preBuiltTransaction? }
   // For direct PSKT object signing, the caller should ensure psktData is the actual transaction object.
-  if (verbose) console.log('래핑된 signWithKastle 호출됨 (wallet.js). psktData가 올바른지 확인하십시오.');
+  if (verbose) console.log('Wrapped signWithKastle called (wallet.js). Please verify psktData is correct.');
   
   if (!psktData || (!psktData.utxos && !psktData.preBuiltTransaction)) {
     console.error('❌ signWithKastle: psktData must contain utxos and outputs, or a preBuiltTransaction. (from wallet.js)');

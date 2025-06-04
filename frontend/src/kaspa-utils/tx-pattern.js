@@ -516,13 +516,12 @@ export async function buildPatternTransactionWithSdk(options = {}) {
  */
 export async function buildPatternTransactionWithWasmSdk(options = {}) {
   try {
-    // Import WASM SDK module
     const { getKaspaWasmModule, getRpcClient } = await import('./sdk-init.js');
     const kaspaWasm = getKaspaWasmModule();
     const rpcClient = getRpcClient();
 
     if (!kaspaWasm || !rpcClient) {
-      throw new Error('WASM SDK not properly initialized. Call initialiseKaspaFramework() first. (from tx-pattern.js)');
+      throw new Error('WASM SDK not properly initialized');
     }
 
     const {
@@ -534,49 +533,31 @@ export async function buildPatternTransactionWithWasmSdk(options = {}) {
       zeroBits = 8,
       maxIterations = 1000000,
       verbose = false,
-      networkId = "testnet-10" // Added networkId option with default
+      networkId = "testnet-10"
     } = options;
 
-    if (verbose) console.log(`🎯 Building pattern transaction with WASM SDK approach (Official Kastle docs) for network: ${networkId}...`);
+    if (verbose) console.log(`Building pattern transaction with WASM SDK for network: ${networkId}`);
 
-    if (!Array.isArray(utxos) || utxos.length === 0) {
-      throw new Error('Invalid UTXOs: must be a non-empty array');
-    }
-    if (!toAddress) {
-      throw new Error('Invalid toAddress: must be provided');
-    }
-    if (!Number.isInteger(amount) || amount <= 0) {
-      throw new Error('Invalid amount: must be a positive integer');
+    // Simplified validation
+    if (!Array.isArray(utxos) || !utxos.length || !toAddress || !Number.isInteger(amount) || amount <= 0) {
+      throw new Error('Invalid input parameters');
     }
 
-    // Convert UTXOs to WASM SDK format (entries)
-    const entries = utxos.map(utxo => {
-      // Handle different UTXO formats
-      const utxoAmount = typeof utxo.amount === 'function' ? utxo.amount() : utxo.amount || 0;
-      const utxoAddress = utxo.address || utxo.scriptPublicKey || '';
-      const utxoTxId = utxo.transactionId || utxo.outpoint?.transactionId || '';
-      const utxoIndex = utxo.index || utxo.outpoint?.index || 0;
-
-      return {
-        address: utxoAddress,
-        amount: BigInt(utxoAmount),
-        outpoint: {
-          transactionId: utxoTxId,
-          index: parseInt(utxoIndex, 10)
-        },
-        utxoEntry: {
-          amount: BigInt(utxoAmount),
-          scriptPublicKey: utxo.scriptPublicKey || utxo.scriptPubKey || '',
-          blockDaaScore: BigInt(utxo.blockDaaScore || 0),
-          isCoinbase: utxo.isCoinbase || false
-        }
-      };
-    });
-
-    if (verbose) {
-      console.log(`🔧 Converted ${entries.length} UTXOs to WASM SDK format`);
-      console.log(`🎯 Starting ${zeroBits}-bit pattern search using WASM SDK createTransactions()...`);
-    }
+    // Simplified UTXO conversion
+    const entries = utxos.map(utxo => ({
+      address: utxo.address || utxo.scriptPublicKey || '',
+      amount: BigInt(utxo.amount || 0),
+      outpoint: {
+        transactionId: utxo.transactionId || utxo.outpoint?.transactionId || '',
+        index: parseInt(utxo.index || utxo.outpoint?.index || 0, 10)
+      },
+      utxoEntry: {
+        amount: BigInt(utxo.amount || 0),
+        scriptPublicKey: utxo.scriptPublicKey || utxo.scriptPubKey || '',
+        blockDaaScore: BigInt(utxo.blockDaaScore || 0),
+        isCoinbase: utxo.isCoinbase || false
+      }
+    }));
 
     let nonce = 0;
     let attempts = 0;
@@ -585,138 +566,90 @@ export async function buildPatternTransactionWithWasmSdk(options = {}) {
     while (attempts < maxIterations) {
       attempts++;
       
-      // Vary the amount slightly with nonce for pattern generation
-      const baseAmountSompi = amount;
-      const nonceVariation = nonce % 1000; // Keep variation small
-      const amountWithNonce = baseAmountSompi + nonceVariation;
+      // Simplified nonce variation
+      const amountWithNonce = amount + (nonce % 1000);
       
-      if (verbose && attempts % 1000 === 0) {
-        console.log(`🔄 WASM SDK attempt ${attempts}: nonce=${nonce}, amount=${amountWithNonce} sompi`);
-      }
-
       try {
-        // Use WASM SDK createTransactions() as shown in official docs
         const pending = await kaspaWasm.createTransactions({
-          entries: entries,
-          outputs: [
-            {
-              address: changeAddress || toAddress,
-              amount: kaspaWasm.kaspaToSompi((amountWithNonce / 100000000).toFixed(8))
-            }
-          ],
+          entries,
+          outputs: [{
+            address: changeAddress || toAddress,
+            amount: kaspaWasm.kaspaToSompi((amountWithNonce / 100000000).toFixed(8))
+          }],
           priorityFee: kaspaWasm.kaspaToSompi((fee / 100000000).toFixed(8)),
           changeAddress: changeAddress || toAddress,
-          networkId: networkId // Use the networkId from options
+          networkId
         });
 
-        if (!pending || !pending.transactions || pending.transactions.length === 0) {
-          throw new Error('createTransactions returned no transactions');
+        if (!pending?.transactions?.length) {
+          throw new Error('No transactions created');
         }
 
         const transaction = pending.transactions[0];
-        
-        // Check if transaction has serializeToSafeJSON method (should have it with WASM SDK)
-        if (typeof transaction.serializeToSafeJSON !== 'function') {
-          throw new Error('WASM SDK transaction missing serializeToSafeJSON() method');
+        const txJson = transaction.serializeToSafeJSON?.() || transaction;
+        const txId = txJson?.id || transaction.id;
+
+        if (!txId) {
+          throw new Error('No transaction ID available');
         }
 
-        // Get transaction ID for pattern checking
-        const txJson = transaction.serializeToSafeJSON();
-        let txId;
-
-        if (txJson && txJson.id) {
-          txId = txJson.id;
-        } else if (typeof transaction.id === 'function') {
-          txId = transaction.id();
-        } else if (transaction.id) {
-          txId = transaction.id;
-        } else {
-          // Calculate TxID if not available
-          txId = 'calculated_' + Date.now() + '_' + nonce;
-        }
-
-        if (verbose && attempts <= 5) {
-          console.log(`🔍 WASM SDK attempt ${attempts}: nonce=${nonce}, amount=${amountWithNonce}, TxID=${txId}`);
-        }
-
-        // Check if TxID matches pattern
         if (checkTxIdPattern(txId, zeroBits)) {
-          const endTime = Date.now();
-          const duration = endTime - startTime;
+          const duration = Date.now() - startTime;
           
           if (verbose) {
-            console.log(`🎉 WASM SDK pattern found! ${attempts} attempts in ${duration}ms (from tx-pattern.js)`);
-            console.log(`🆔 Pattern TxID: ${txId}`);
-            console.log(`🔢 Winning nonce: ${nonce}`);
-            console.log(`💰 Final amount: ${amountWithNonce} sompi`);
-            console.log(`✅ Transaction has serializeToSafeJSON() method: ${typeof transaction.serializeToSafeJSON === 'function'}`);
+            console.log(`Pattern found! ${attempts} attempts in ${duration}ms`);
+            console.log(`TxID: ${txId}, Nonce: ${nonce}, Amount: ${amountWithNonce} sompi`);
           }
 
           return {
             success: true,
-            transaction: transaction, // WASM SDK transaction with serializeToSafeJSON()
-            txJson: txJson, // Serialized JSON for reference
-            txId: txId,
-            nonce: nonce,
-            attempts: attempts,
-            duration: duration,
-            nonceVariation: nonceVariation,
+            transaction,
+            txJson,
+            txId,
+            nonce,
+            attempts,
+            duration,
             winningAmount: amountWithNonce,
-            zeroBits: zeroBits,
-            method: 'WASM SDK Pattern Matching (createTransactions)',
-            metadata: {
-              totalInput: entries.reduce((sum, entry) => sum + Number(entry.amount), 0),
-              baseAmount: baseAmountSompi,
-              finalAmount: amountWithNonce,
-              patternStrategy: 'WASM SDK transaction with serializeToSafeJSON()',
-              utxoCount: entries.length,
-              outputCount: 1,
-              approach: 'Official Kastle documentation approach',
-              hasSerializeMethod: typeof transaction.serializeToSafeJSON === 'function',
-              wasmSdkCompatible: true,
-              kastleApiReady: true
-            }
+            zeroBits,
+            method: 'WASM SDK Pattern Matching'
           };
         }
 
         nonce++;
         
-        if (attempts % 5000 === 0 && verbose) {
-          console.log(`🔄 WASM SDK pattern search progress: ${attempts} attempts (${((attempts/maxIterations)*100).toFixed(1)}%) (from tx-pattern.js)`);
+        if (verbose && attempts % 5000 === 0) {
+          console.log(`Progress: ${attempts}/${maxIterations} attempts`);
         }
 
-      } catch (createError) {
-        if (attempts % 10000 === 0 && verbose) {
-          console.warn(`⚠️ WASM SDK createTransactions error at attempt ${attempts} (from tx-pattern.js):`, createError.message);
+      } catch (error) {
+        if (verbose && attempts % 10000 === 0) {
+          console.warn(`Error at attempt ${attempts}:`, error.message);
         }
-        nonce++; // Continue with next nonce
+        nonce++;
       }
     }
 
-    const endTime = Date.now();
-    const duration = endTime - startTime;
+    const duration = Date.now() - startTime;
     
     if (verbose) {
-      console.log(`⏰ WASM SDK pattern search completed: ${attempts} attempts in ${duration}ms (from tx-pattern.js)`);
-      console.log(`❌ ${zeroBits}-bit pattern not found within ${maxIterations} iterations`);
+      console.log(`Pattern search completed: ${attempts} attempts in ${duration}ms`);
+      console.log(`No ${zeroBits}-bit pattern found within ${maxIterations} iterations`);
     }
-    
+
     return {
       success: false,
-      attempts: attempts,
-      duration: duration,
-      zeroBits: zeroBits,
-      maxIterations: maxIterations,
-      error: `Pattern not found within ${maxIterations} iterations`,
-      method: 'WASM SDK Pattern Matching (createTransactions) - failed'
+      attempts,
+      duration,
+      zeroBits,
+      error: `Pattern not found within ${maxIterations} iterations`
     };
 
   } catch (error) {
-    console.error('❌ Error in WASM SDK pattern transaction building (from tx-pattern.js):', error);
+    console.error('Error in buildPatternTransactionWithWasmSdk:', error);
     return {
       success: false,
       error: error.message,
-      method: 'WASM SDK Pattern Matching (createTransactions) - error'
+      zeroBits: options.zeroBits || 8
     };
   }
 }

@@ -27,7 +27,7 @@ const PatternTransactionGenerator = () => {
   const [workflowRecipientAddress, setWorkflowRecipientAddress] = useState('kaspatest:qr8x7gdgqsdcy92et2g35pfcqkl55sqm89t2qke5y7ark39yyr9zhadpa7m3w');
   const [workflowAmountKas, setWorkflowAmountKas] = useState('1');
   const [workflowFeeKas, setWorkflowFeeKas] = useState('1');
-  const [workflowPatternBits, setWorkflowPatternBits] = useState(8);
+  const [workflowPatternBits, setWorkflowPatternBits] = useState(10);
   const [workflowNetworkId, setWorkflowNetworkId] = useState('testnet-10');
   const [isExecutingFiveStepWorkflow, setIsExecutingFiveStepWorkflow] = useState(false);
 
@@ -240,7 +240,7 @@ const PatternTransactionGenerator = () => {
             backgroundClip: 'text',
             margin: '0 0 10px 0'
           }}>
-            🚀 Kaspa 5-Step Pattern Workflow
+            🚀 Kaspa Pattern Workflow
           </h1>
           <p style={{ 
             fontSize: '1.1em',
@@ -396,7 +396,7 @@ const PatternTransactionGenerator = () => {
                 marginBottom: '20px'
               }}>
                 <h3 style={{ margin: '0 0 15px 0' }}>Workflow Details</h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '15px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '24px' }}>
                   <div>
                     <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>
                       Network ID:
@@ -482,7 +482,7 @@ const PatternTransactionGenerator = () => {
                         fontSize: '16px'
                       }}
                     >
-                      {[4, 6, 8, 10, 12, 14, 16, 18, 20].map(bits => <option key={bits} value={bits}>{bits} bits</option>)}
+                      {[4, 6, 8, 10].map(bits => <option key={bits} value={bits}>{bits} bits</option>)}
                     </select>
                   </div>
                 </div>
@@ -574,7 +574,7 @@ const PatternTransactionGenerator = () => {
           fontSize: '14px'
         }}>
           <p style={{ margin: 0 }}>
-            🚀 Powered by Kaspa Network | Built with React & Kastle SDK
+             Built by Luke Dunshea
           </p>
         </div>
       </div>

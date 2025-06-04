@@ -1,12 +1,12 @@
 // Kaspa Pattern Preservation Verification Module
 
-import { broadcastViaWasmSdk } from './broadcast.js';
+import { broadcastPatternTransactionDirect } from './broadcast.js';
 import { checkTxIdPattern } from './tx-pattern.js';
 
 /**
  * 🎯 VERIFY PATTERN PRESERVATION - Task 4.4 Implementation
  * Tests end-to-end pattern TxID preservation through the complete flow:
- * Pattern Generation → Signing → WASM SDK Broadcasting → Network Verification
+ * Pattern Generation → Signing → Kastle API Broadcasting → Network Verification
  * @param {Object} signedPskt - Signed PSKT from signPskt()
  * @param {string} originalPatternTxId - Original pattern TxID from buildPatternTransactionWithSdk
  * @param {number} bitCount - Number of trailing zero bits in the pattern
@@ -28,7 +28,7 @@ export async function verifyPatternPreservation(signedPskt, originalPatternTxId,
       console.log('🎯 Starting Pattern TxID Preservation Verification (from pattern-verification.js)...');
       console.log('🔍 Original Pattern TxID:', originalPatternTxId);
       console.log(`🎯 Expected Pattern: ${bitCount} trailing zero bits`);
-      console.log('📡 Broadcasting via kaspa-wasm32-sdk to preserve exact TxID...');
+      console.log('📡 Broadcasting via Kastle API to preserve exact TxID...');
     }
 
     // Step 1: Pre-broadcast validation
@@ -66,11 +66,11 @@ export async function verifyPatternPreservation(signedPskt, originalPatternTxId,
       };
     }
 
-    // Step 2: Broadcast via WASM SDK
-    if (verbose) console.log('🚀 Broadcasting via kaspa-wasm32-sdk (from pattern-verification.js calling broadcast.js)...');
+    // Step 2: Broadcast via Kastle API
+    if (verbose) console.log('🚀 Broadcasting via Kastle API (from pattern-verification.js calling broadcast.js)...');
     
-    const broadcastResult = await broadcastViaWasmSdk(signedPskt, {
-      nodeUrl,
+    const broadcastResult = await broadcastPatternTransactionDirect(signedPskt, originalPatternTxId, {
+      networkId: 'testnet-10',
       verbose // Pass verbose option to broadcast function
     });
 
@@ -134,7 +134,7 @@ export async function verifyPatternPreservation(signedPskt, originalPatternTxId,
         perfectSuccess: patternAnalysis.overallSuccess,
         nodeUrl,
         network: 'testnet-10', // Assuming testnet-10 from default nodeUrl
-        method: 'kaspa-wasm32-sdk',
+        method: 'Kastle API',
         totalDuration: Date.now() - startTime
       }
     };
@@ -180,7 +180,7 @@ export async function verifyPatternPreservation(signedPskt, originalPatternTxId,
       },
       troubleshooting: {
         checkList: [
-          'Verify kaspa-wasm32-sdk is properly loaded',
+          'Verify Kastle wallet is properly connected',
           'Ensure node is accessible',
           'Check signed PSKT format and validity',
           'Verify network connectivity'

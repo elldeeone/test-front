@@ -295,8 +295,8 @@ export function validatePsktJson(psktJson, verbose = false) {
 }
 
 /**
- * 🎯 TASK 6.1: Convert Signed PSKT to WASM Transaction Object
- * Converts Kastle's signed PSKT format to WASM Transaction object for Leo's API
+ * Convert Signed PSKT to WASM Transaction Object
+ * Converts Kastle's signed PSKT format to WASM Transaction object for direct API integration
  * This preserves the TxID and signature scripts from the signed PSKT
  * @param {Object|string} signedPskt - Signed PSKT from Kastle wallet (JSON string or object)
  * @param {Object} options - Conversion options
@@ -462,15 +462,15 @@ export async function convertSignedPsktToWasmTransaction(signedPskt, options = {
 }
 
 /**
- * 🎯 TASK 6.2: Convert Signed PSKT to Leo's API Format
- * Complete function to convert signed PSKT to serializeToSafeJSON() format for Leo's API
- * Uses Task 6.1 conversion function and calls serializeToSafeJSON() method
+ * Convert Signed PSKT to Direct API Format
+ * Complete function to convert signed PSKT to serializeToSafeJSON() format for direct API integration
+ * Uses convertSignedPsktToWasmTransaction function and calls serializeToSafeJSON() method
  * @param {Object|string} signedPskt - Signed PSKT from Kastle wallet (JSON string or object)
  * @param {Object} options - Conversion options
  * @param {boolean} options.verbose - Enable detailed logging (default: false)
- * @returns {Promise<Object>} Conversion result with Leo's API JSON format
+ * @returns {Promise<Object>} Conversion result with direct API JSON format
  */
-export async function convertSignedPsktToLeosApiFormat(signedPskt, options = {}) {
+export async function convertSignedPsktToDirectApiFormat(signedPskt, options = {}) {
   try {
     const { verbose = false } = options;
     
