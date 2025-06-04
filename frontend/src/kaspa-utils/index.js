@@ -10,6 +10,5 @@ export * from './broadcast.js';
 export * from './tx-monitor.js';
 export * from './pattern-verification.js';
 export * from './workflows.js';
-export * from './node-connection-test.js';
 
 console.log('📦 Kaspa Utils Index module loaded successfully (kaspa-utils/index.js)'); 
